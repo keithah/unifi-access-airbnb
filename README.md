@@ -19,14 +19,17 @@ This project integrates UniFi Access with Airbnb reservations, automating the pr
 ## Installation
 
 1. Clone the repository:
-git clone https://github.com/yourusername/unifi-access-airbnb.git
+
+git clone https://github.com/keithah/unifi-access-airbnb.git
+
 cd unifi-access-airbnb
 
-2. Install the required packages:
+3. Install the required packages:
 pip install -r requirements.txt
 
-3. Copy the example configuration file and edit it with your settings:
+4. Copy the example configuration file and edit it with your settings:
 cp unifi.conf.example unifi.conf
+
 nano unifi.conf
 
 ## Configuration
