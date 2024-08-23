@@ -87,13 +87,6 @@ class UnifiAccessManager:
         else:
             return True
 
-    def is_pin_in_use(self, pin_code):
-        visitors = self.fetch_visitors()
-        for visitor in visitors:
-            if "pin_codes" in visitor and pin_code in visitor["pin_codes"]:
-                return True
-        return False
-
     def process_reservations(self, reservations):
         today = datetime.date.today()
         next_month = today + datetime.timedelta(days=30)
@@ -140,11 +133,16 @@ class UnifiAccessManager:
                     self.logger.error(f"Failed to delete visitor: {visitor['first_name']} {visitor['last_name']}")
 
     def generate_summary(self):
-        summary = "UniFi Access Update Summary:\n"
-        summary += f"{len(self.changes['unchanged'])} existing visitors unchanged\n"
-        summary += f"{len(self.changes['deleted'])} visitor(s) deleted\n"
-        summary += f"{len(self.changes['added'])} visitor(s) added\n"
-        return summary
+        summary = "Hostex-UniFi Access Summary:\n"
+        unchanged_names = ", ".join(self.changes['unchanged'])
+        summary += f"{len(self.changes['unchanged'])} existing visitors unchanged ({unchanged_names})\n"
+        if self.changes['deleted']:
+            deleted_names = ", ".join(self.changes['deleted'])
+            summary += f"{len(self.changes['deleted'])} visitor(s) deleted ({deleted_names})\n"
+        if self.changes['added']:
+            added_names = ", ".join(self.changes['added'])
+            summary += f"{len(self.changes['added'])} visitor(s) added ({added_names})\n"
+        return summary.strip()
 
     def has_changes(self):
         return bool(self.changes['added'] or self.changes['deleted'])
