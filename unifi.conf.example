@@ -1,0 +1,26 @@
+[UniFi]
+api_host = https://unifi-access-ip:12445
+api_token = your_unifi_access_api_token
+
+[Hostex]
+api_url = https://api.hostex.io/v3
+api_key = your_hostex_api_key
+
+[Airbnb]
+ics_url = https://www.airbnb.com/calendar/ical/your_ical_id.ics
+
+[Simplepush]
+enabled = true
+key = your_simplepush_key
+url = https://api.simplepush.io/send
+
+[Door]
+default_group_id = your_default_door_group_id
+
+[Visitor]
+check_in_time = 16:00:00
+check_out_time = 11:00:00
+
+[General]
+log_file = unifi_access_airbnb.log
+pin_code_digits = 4

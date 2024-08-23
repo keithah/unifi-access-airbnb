@@ -1,0 +1,7 @@
+unifi.conf
+*.log
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+*.swp

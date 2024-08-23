@@ -1,0 +1,4 @@
+requests==2.26.0
+icalendar==4.0.7
+urllib3==1.26.7
+configparser==5.0.2
