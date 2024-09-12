@@ -60,6 +60,9 @@ def main():
         logger.info(f"Processing {len(reservations)} reservations")
         unifi_manager.process_reservations(reservations)
         
+        logger.info("Checking and updating PINs for existing visitors")
+        unifi_manager.check_and_update_pins()
+        
         summary = unifi_manager.generate_summary()
         logger.info(summary)
 

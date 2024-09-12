@@ -33,15 +33,17 @@ class UnifiAccessManager:
             self.logger.error("No door groups available")
             raise ValueError("No door groups available")
 
-    def create_visitor(self, first_name, last_name, start_time, end_time):
+    def create_visitor(self, first_name, last_name, phone_number, start_time, end_time):
         url = f"{self.api_host}/api/v1/developer/visitors"
         headers = {
             "Authorization": f"Bearer {self.api_token}",
             "Content-Type": "application/json"
         }
+        pin_code = phone_number[-self.pin_code_digits:] if phone_number and len(phone_number) >= self.pin_code_digits else ""
         data = {
             "first_name": first_name,
             "last_name": last_name,
+            "mobile_phone": phone_number,
             "start_time": start_time,
             "end_time": end_time,
             "visit_reason": "Other",
@@ -60,13 +62,15 @@ class UnifiAccessManager:
             self.logger.debug(f"API response status code: {response.status_code}")
             self.logger.debug(f"API response content: {response.text}")
             
-            response.raise_for_status()  # Raise an exception for bad status codes
+            response.raise_for_status()
             
             response_data = response.json()
             if response_data.get('code') == 'SUCCESS':
                 visitor_id = response_data.get('data', {}).get('id')
                 if visitor_id:
                     self.logger.debug(f"Created visitor with ID: {visitor_id}")
+                    if pin_code:
+                        self.assign_pin_to_visitor(visitor_id, pin_code)
                     return True
                 else:
                     self.logger.error("Visitor ID not found in the response")
@@ -77,6 +81,27 @@ class UnifiAccessManager:
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Request failed: {str(e)}")
             return False
+
+    def assign_pin_to_visitor(self, visitor_id, pin_code):
+        url = f"{self.api_host}/api/v1/developer/visitors/{visitor_id}/pin_codes"
+        headers = {
+            "Authorization": f"Bearer {self.api_token}",
+            "Content-Type": "application/json"
+        }
+        data = {"pin_code": pin_code}
+        
+        self.logger.debug(f"Assigning PIN {pin_code} to visitor {visitor_id}")
+        self.logger.debug(f"Request URL: {url}")
+        self.logger.debug(f"Request data: {json.dumps(data)}")
+        
+        response = requests.put(url, json=data, headers=headers, verify=False)
+        self.logger.debug(f"Assign PIN API response status code: {response.status_code}")
+        self.logger.debug(f"Assign PIN API response content: {response.text}")
+        
+        if response.status_code != 200:
+            self.logger.error(f"Failed to assign PIN code to visitor: {visitor_id}")
+            return False
+        return True
 
     def fetch_visitors(self):
         url = f"{self.api_host}/api/v1/developer/visitors"
@@ -90,7 +115,11 @@ class UnifiAccessManager:
         if response.status_code == 200:
             data = response.json()
             if 'data' in data:
-                return data['data']
+                visitors = data['data']
+                self.logger.debug(f"Fetched {len(visitors)} visitors")
+                for visitor in visitors:
+                    self.logger.debug(f"Visitor: {visitor['first_name']} {visitor['last_name']}, Phone: {visitor.get('mobile_phone', 'N/A')}, PIN: {'Set' if visitor.get('pin_code') else 'Not Set'}")
+                return visitors
             else:
                 self.logger.error(f"Unexpected response format: {data}")
                 return []
@@ -128,6 +157,7 @@ class UnifiAccessManager:
             if today <= check_in_date <= next_month and reservation["status"] == "accepted":
                 guest_name = reservation["guests"][0]["name"] if reservation["guests"] else "Guest"
                 first_name, last_name = guest_name.split(" ", 1) if " " in guest_name else (guest_name, "")
+                phone_number = reservation["guests"][0].get("phone", "") if reservation["guests"] else ""
 
                 existing_visitor = next(
                     (v for v in existing_visitors if
@@ -144,7 +174,7 @@ class UnifiAccessManager:
                     start_timestamp = int(start_datetime.timestamp())
                     end_timestamp = int(end_datetime.timestamp())
                     
-                    success = self.create_visitor(first_name, last_name, start_timestamp, end_timestamp)
+                    success = self.create_visitor(first_name, last_name, phone_number, start_timestamp, end_timestamp)
                     if success:
                         self.changes['added'].append(guest_name)
                     else:
@@ -159,6 +189,28 @@ class UnifiAccessManager:
                     self.changes['deleted'].append(f"{visitor['first_name']} {visitor['last_name']}")
                 else:
                     self.logger.error(f"Failed to delete visitor: {visitor['first_name']} {visitor['last_name']}")
+
+    def check_and_update_pins(self):
+        visitors = self.fetch_visitors()
+        self.logger.debug(f"Checking PINs for {len(visitors)} visitors")
+        for visitor in visitors:
+            self.logger.debug(f"Checking visitor: {visitor['first_name']} {visitor['last_name']}")
+            if 'pin_code' not in visitor or not visitor['pin_code']:
+                self.logger.debug(f"Visitor {visitor['first_name']} {visitor['last_name']} has no PIN")
+                phone_number = visitor.get('mobile_phone', '')
+                self.logger.debug(f"Visitor phone number: {phone_number}")
+                pin_code = phone_number[-self.pin_code_digits:] if phone_number and len(phone_number) >= self.pin_code_digits else ""
+                if pin_code:
+                    self.logger.debug(f"Attempting to set PIN {pin_code} for visitor {visitor['id']}")
+                    success = self.assign_pin_to_visitor(visitor['id'], pin_code)
+                    if success:
+                        self.logger.info(f"Updated PIN for visitor: {visitor['first_name']} {visitor['last_name']}")
+                    else:
+                        self.logger.error(f"Failed to update PIN for visitor: {visitor['first_name']} {visitor['last_name']}")
+                else:
+                    self.logger.warning(f"No valid phone number to generate PIN for visitor: {visitor['first_name']} {visitor['last_name']}")
+            else:
+                self.logger.debug(f"Visitor {visitor['first_name']} {visitor['last_name']} already has a PIN")
 
     def generate_summary(self):
         summary = "Hostex-UniFi Access Summary:\n"
