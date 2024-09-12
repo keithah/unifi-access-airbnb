@@ -167,7 +167,10 @@ class UnifiAccessManager:
                 )
 
                 if existing_visitor:
+                    self.logger.debug(f"Visitor already exists for dates {check_in_date} to {check_out_date}: {existing_visitor['first_name']} {existing_visitor['last_name']}")
                     self.changes['unchanged'].append(f"{existing_visitor['first_name']} {existing_visitor['last_name']}")
+                    if not existing_visitor.get('pin_code') and phone_number:
+                        self.assign_pin_to_visitor(existing_visitor['id'], phone_number[-self.pin_code_digits:])
                 else:
                     start_datetime = datetime.datetime.combine(check_in_date, self.check_in_time)
                     end_datetime = datetime.datetime.combine(check_out_date, self.check_out_time)
@@ -177,6 +180,7 @@ class UnifiAccessManager:
                     success = self.create_visitor(first_name, last_name, phone_number, start_timestamp, end_timestamp)
                     if success:
                         self.changes['added'].append(guest_name)
+                        self.logger.info(f"Created new visitor: {guest_name}")
                     else:
                         self.logger.error(f"Failed to create visitor: {guest_name}")
 
@@ -187,6 +191,7 @@ class UnifiAccessManager:
                 success = self.delete_visitor(visitor["id"], is_completed)
                 if success:
                     self.changes['deleted'].append(f"{visitor['first_name']} {visitor['last_name']}")
+                    self.logger.info(f"Deleted visitor: {visitor['first_name']} {visitor['last_name']}")
                 else:
                     self.logger.error(f"Failed to delete visitor: {visitor['first_name']} {visitor['last_name']}")
 
