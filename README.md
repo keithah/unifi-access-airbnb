@@ -20,7 +20,7 @@ This project integrates UniFi Access with Airbnb reservations, automating the pr
 
 1. Clone the repository:
 
-git clone https://github.com/yourusername/unifi-access-airbnb.git
+git clone https://github.com/keithah/unifi-access-airbnb.git
 
 cd unifi-access-airbnb
 
