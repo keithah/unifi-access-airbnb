@@ -17,7 +17,8 @@ class ICSParser:
             end = event.get("DTEND").dt
             description = event.get("DESCRIPTION", "")
             if not description:
-                self.logger.debug(f"Skipping event with start date {start.date()} due to missing description")
+                start_date = start if isinstance(start, datetime.date) else start.date()
+                self.logger.debug(f"Skipping event with start date {start_date} due to missing description")
                 continue
             pin_code = ""
             for line in description.split("\n"):
@@ -25,8 +26,8 @@ class ICSParser:
                     pin_code = line.split(": ")[1].strip()
                     break
             reservations.append({
-                "check_in_date": start.date() if isinstance(start, datetime.datetime) else start,
-                "check_out_date": end.date() if isinstance(end, datetime.datetime) else end,
+                "check_in_date": start if isinstance(start, datetime.date) else start.date(),
+                "check_out_date": end if isinstance(end, datetime.date) else end.date(),
                 "guests": [{"name": "Airbnb Guest", "phone": pin_code}],
                 "status": "accepted"
             })
