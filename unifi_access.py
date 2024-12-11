@@ -220,13 +220,13 @@ class UnifiAccessManager:
     def generate_summary(self):
         summary = "Hostex-UniFi Access Summary:\n"
         unchanged_names = ", ".join(self.changes['unchanged'])
-        summary += f"{len(self.changes['unchanged'])} existing visitors unchanged ({unchanged_names})\n"
+        summary += f"{len(self.changes['unchanged'])} existing UniFi Access visitors unchanged ({unchanged_names})\n"
         if self.changes['deleted']:
             deleted_names = ", ".join(self.changes['deleted'])
-            summary += f"{len(self.changes['deleted'])} visitor(s) deleted ({deleted_names})\n"
+            summary += f"{len(self.changes['deleted'])} UniFi Access visitor(s) deleted ({deleted_names})\n"
         if self.changes['added']:
             added_names = ", ".join(self.changes['added'])
-            summary += f"{len(self.changes['added'])} visitor(s) added ({added_names})\n"
+            summary += f"{len(self.changes['added'])} UniFi Access visitor(s) added ({added_names})\n"
         return summary.strip()
 
     def has_changes(self):
