@@ -24,9 +24,12 @@ git clone https://github.com/keithah/unifi-access-airbnb.git
 cd unifi-access-airbnb
 
 2. Install the required packages:
+
+
 pip install -r requirements.txt
 
 3. Copy the example configuration file and edit it with your settings:
+
 cp unifi.conf.example unifi.conf
 
 nano unifi.conf
