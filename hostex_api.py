@@ -8,7 +8,7 @@ class HostexManager:
         self.logger = logging.getLogger(__name__)
 
     def fetch_reservations(self):
-        url = f"{self.api_url}/reservations"
+        url = f"{self.api_url}/reservations?limit=100"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
