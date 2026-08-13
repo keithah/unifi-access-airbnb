@@ -1,4 +1,4 @@
-requests==2.32.4
+requests==2.33.0
 icalendar==4.0.7
-urllib3==2.6.3
+urllib3==2.7.0
 configparser==5.0.2
